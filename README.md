@@ -112,11 +112,12 @@ O campo `concluido` utiliza `0` para pendente e `1` para concluída.
 
 ## Integrantes
 
-Roberto Rosado - roberto-ros4do - 47938439
-Rafael Oliveira - ROS757 -
-Matheus Mendes - mendesmatheus846 -
-Julia Rodrigues - juliarodriguesbezerra02-cell -
-Nicole Albuquerque - nicolealbuquerque2006 -
+
+- Roberto Rosado - roberto-ros4do - 47938439
+- Rafael Oliveira - ROS757 -
+- Matheus Mendes - mendesmatheus846 -
+- Julia Rodrigues - juliarodriguesbezerra02-cell -
+- Nicole Albuquerque - nicolealbuquerque2006 -
 
 ## Disciplina
 
