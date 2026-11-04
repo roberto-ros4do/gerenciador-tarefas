@@ -2,44 +2,103 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <!-- viewport: faz a página se adaptar à largura do celular, sem precisar dar zoom -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Lista de Tarefas</title>
+
+    <!-- Fontes do Google: Bricolage Grotesque nos títulos e Onest nos textos -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://jsdelivr.net">
 </head>
 <body>
+    <!--
+    IMPORTANTE: os ids e as classes abaixo são usados pelo main.js para encontrar os elementos
+    (adicionaTarefa, nome, hora, .tarefas, .tarefa, .descricao, .horario, .excluir,
+    .botao, .botaoAtivo e data-filtro). Por isso eles foram mantidos com os mesmos nomes:
+    só o visual mudou, o funcionamento continua igual.
+    -->
     <div class="container">
-            <header>
+
+        <!-- Cabeçalho: a faixa escura com estrelas no topo do cartão -->
+        <header>
+            <!-- Ícone do app desenhado em SVG (um círculo com um "check"). aria-hidden: é só enfeite, o leitor de tela ignora -->
+            <svg class="logo" viewBox="0 0 48 48" aria-hidden="true">
+                <circle cx="24" cy="24" r="22" />
+                <path d="M15 24.5l6 6 12-13" />
+            </svg>
+            <div>
                 <h1>Lista de Tarefas</h1>
                 <p>Faça sua programação de afazeres</p>
-            </header>
-            <main>
-                <form class="adicionaTarefa" id="adicionaTarefa">
-                    <input type="text" id="nome" placeholder="Adicionar uma tarefa...">
-                    <input type="time" id="hora">
-                    <button type="submit">Enviar</button>
-                </form>
-                <h2>Minhas tarefas</h2>
-                <form class="filtro">
-                    <button type="button" onclick="filtrar('todas')" data-filtro="todas" class="botaoAtivo">Todas</button>
-                    <button type="button" onclick="filtrar('pendentes')" data-filtro="pendentes" class="botao">Pendentes</button>
-                    <button type="button" onclick="filtrar('concluidas')" data-filtro="concluidas" class="botao">Concluídas</button>
-                </form>
-                <div class="tarefas">
-                    <div class="tarefa">
-                        <div class="descricao">
-                            <input type="checkbox" name="concluido" id="idexemplo">
-                            <label for="idexemplo">Revisar JavaScript</label>
-                        </div>
-                        <span class="horario">12:50</span>
-                        <button type="button" class="excluir">Excluir</button>
-                    </div>
-                </div>
-            </main>
-            <footer id="footer">
-                <p>X tarefas no total</p>
-            </footer>
+            </div>
+
+            <!--
+            Seletor de cores, feito só com HTML e CSS:
+            cada bolinha é um <label> ligado a um <input type="radio"> (pelo for/id).
+            Como todos os rádios têm o mesmo name, só um fica marcado por vez,
+            e o CSS troca as cores do site conforme o rádio marcado (seção 9 do style.css).
+            O --bolinha em style="" é a cor que aparece em cada bolinha.
+            -->
+            <div class="temas" role="radiogroup" aria-label="Cor do tema">
+                <input type="radio" name="tema" id="tema-por-do-sol" checked>
+                <label for="tema-por-do-sol" style="--bolinha: linear-gradient(135deg, #F76707, #D6336C)" title="Pôr do sol"><span class="escondido">Pôr do sol</span></label>
+
+                <input type="radio" name="tema" id="tema-oceano">
+                <label for="tema-oceano" style="--bolinha: linear-gradient(135deg, #1C7ED6, #15AABF)" title="Oceano"><span class="escondido">Oceano</span></label>
+
+                <input type="radio" name="tema" id="tema-floresta">
+                <label for="tema-floresta" style="--bolinha: linear-gradient(135deg, #2B8A3E, #94D82D)" title="Floresta"><span class="escondido">Floresta</span></label>
+
+                <input type="radio" name="tema" id="tema-lavanda">
+                <label for="tema-lavanda" style="--bolinha: linear-gradient(135deg, #CC5DE8, #F783AC)" title="Lavanda"><span class="escondido">Lavanda</span></label>
+
+                <input type="radio" name="tema" id="tema-terminal">
+                <label for="tema-terminal" style="--bolinha: linear-gradient(135deg, #050807, #00E676)" title="Terminal"><span class="escondido">Terminal</span></label>
+            </div>
+        </header>
+
+        <main>
+            <!--
+            Formulário de nova tarefa.
+            - "required" faz o próprio navegador avisar se o campo estiver vazio, antes de enviar.
+            - As <label> com a classe "escondido" não aparecem na tela, mas são lidas por leitores de tela
+              (acessibilidade): assim cada campo tem um nome, mesmo sem texto visível.
+            -->
+            <form class="adicionaTarefa" id="adicionaTarefa">
+                <label for="nome" class="escondido">Nome da tarefa</label>
+                <input type="text" id="nome" placeholder="Adicionar uma tarefa..." maxlength="255" required>
+
+                <label for="hora" class="escondido">Horário</label>
+                <input type="time" id="hora" required>
+
+                <button type="submit">Adicionar</button>
+            </form>
+
+            <h2>Minhas tarefas</h2>
+
+            <!-- Filtros: o main.js troca a classe "botao" por "botaoAtivo" no botão clicado -->
+            <form class="filtro" aria-label="Filtrar tarefas">
+                <button type="button" onclick="filtrar('todas')" data-filtro="todas" class="botaoAtivo">Todas</button>
+                <button type="button" onclick="filtrar('pendentes')" data-filtro="pendentes" class="botao">Pendentes</button>
+                <button type="button" onclick="filtrar('concluidas')" data-filtro="concluidas" class="botao">Concluídas</button>
+            </form>
+
+            <!--
+            Lista de tarefas: o main.js busca as tarefas na API e cria cada item aqui dentro.
+            A div começa VAZIA de propósito (sem nem espaço entre as tags): assim o CSS consegue
+            mostrar a mensagem de "nenhuma tarefa" usando o seletor :empty.
+            -->
+            <div class="tarefas" aria-live="polite"></div>
+        </main>
+
+        <!-- Rodapé: o texto do contador é escrito pelo CSS (veja "Contador" no style.css) -->
+        <footer>
+            <p class="contador"></p>
+        </footer>
     </div>
+
     <script src="main.js"></script>
     <!--
     <input type="submit"> -> envia o formulário

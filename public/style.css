@@ -1,175 +1,581 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* ==========================================================================
+   LISTA DE TAREFAS · folha de estilos
+   Organização do arquivo:
+   1. Variáveis (cores, raios e sombras usados em todo o site)
+   2. Base (reset e fundo da página com estrelas)
+   3. Cartão principal e cabeçalho
+   4. Formulário de nova tarefa
+   5. Filtros
+   6. Lista de tarefas (cada item, checkbox, horário e botão excluir)
+   7. Lista vazia e contador do rodapé (feitos só com CSS)
+   8. Celular e acessibilidade
+   9. Temas de cores (e o seletor de bolinhas do cabeçalho)
+   ========================================================================== */
 
+
+/* ---------- 1. Variáveis (tema padrão: Pôr do sol) ----------
+   Variáveis CSS (custom properties) guardam valores que se repetem.
+   TODAS as cores do site saem daqui: para criar um tema novo, basta mudar estas variáveis
+   (veja os outros temas na seção 9, no fim do arquivo). */
+:root {
+    --fundo-1: #2A0E2E;        /* céu da página (degradê do fundo-1 para o fundo-2) */
+    --fundo-2: #4A1430;
+    --cab-1: #3A1033;          /* faixa do cabeçalho */
+    --cab-2: #5C1A3A;
+    --nuvem-a: rgba(255, 122, 69, 0.55);   /* "nuvens" coloridas do fundo */
+    --nuvem-b: rgba(214, 51, 108, 0.50);
+    --nuvem-c: rgba(255, 212, 59, 0.18);
+    --estrela: #FFE3D3;        /* cor das estrelinhas */
+
+    --tema: #F76707;           /* cor principal (botões, check, filtro ativo) */
+    --tema-2: #D6336C;         /* segunda cor (degradê do botão, etiqueta do horário) */
+    --destaque: #FFD43B;       /* círculo do ícone do cabeçalho */
+    --icone: #3A1033;          /* "check" desenhado dentro do ícone */
+    --texto-cab: #FFFFFF;      /* texto do cabeçalho */
+    --perigo: #E03131;         /* vermelho do botão excluir */
+
+    --superficie: #FFFFFF;     /* fundo do cartão */
+    --superficie-2: #FFF4EE;   /* fundo dos campos e das tarefas */
+    --linha: #F3DDD2;          /* bordas finas */
+    --texto: #2B1A22;
+    --texto-suave: #7A5C66;
+
+    --raio: 16px;              /* cantos arredondados */
+}
+
+
+/* ---------- 2. Base ---------- */
+
+/* box-sizing: border-box faz o padding e a borda ficarem DENTRO da largura definida,
+   o que deixa as medidas muito mais fáceis de prever */
 * {
     margin: 0;
+    padding: 0;
     box-sizing: border-box;
-    font-weight: 500;
 }
 
 body {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 0;
-  background-color: #33358b;
-  font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;                 /* flexbox para centralizar o cartão na tela */
+    justify-content: center;       /* centraliza na horizontal */
+    align-items: center;           /* centraliza na vertical */
+    padding: 32px 16px;
+    font-family: 'Onest', system-ui, sans-serif;
+    color: var(--texto);
+
+    /* Fundo de "nebulosa": vários degradês empilhados.
+       Os radial-gradient são as "nuvens" coloridas e o linear-gradient é o céu escuro. */
+    background:
+        radial-gradient(600px 400px at 85% 10%, var(--nuvem-a), transparent 70%),
+        radial-gradient(520px 380px at 10% 90%, var(--nuvem-b), transparent 70%),
+        radial-gradient(400px 260px at 60% 60%, var(--nuvem-c), transparent 70%),
+        linear-gradient(135deg, var(--fundo-1), var(--fundo-2));
+    background-attachment: fixed;  /* o fundo fica parado quando a página rola */
 }
+
+/* Estrelas: um pseudo-elemento (::before) que cobre a tela inteira.
+   Cada radial-gradient pequeno desenha um "pontinho" de luz.
+   background-size faz o desenho se repetir, espalhando as estrelas pela tela. */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;                      /* o mesmo que top, right, bottom e left = 0 */
+    z-index: -1;                   /* fica atrás de todo o conteúdo */
+    pointer-events: none;          /* não atrapalha os cliques */
+    background-image:
+        radial-gradient(1.4px 1.4px at 20px 30px, var(--estrela), transparent),
+        radial-gradient(1px 1px at 90px 120px, var(--estrela), transparent),
+        radial-gradient(1.6px 1.6px at 160px 60px, var(--estrela), transparent),
+        radial-gradient(1px 1px at 230px 170px, var(--estrela), transparent),
+        radial-gradient(1.3px 1.3px at 300px 90px, var(--estrela), transparent);
+    background-size: 340px 220px;
+    animation: brilhar 4s ease-in-out infinite alternate;
+}
+
+/* @keyframes define uma animação: aqui as estrelas ficam mais fortes e mais fracas */
+@keyframes brilhar {
+    from { opacity: 0.5; }
+    to   { opacity: 1; }
+}
+
+
+/* ---------- 3. Cartão principal e cabeçalho ---------- */
 
 .container {
-    width: 500px;
-    max-width: 90%;
-    padding: 2rem;
-    border-radius: 12px;
-    background-color: #101827;
-    /*
-    OBS1: quando a largura é definida o padding faz parte dela
-    OBS2: antes o .container estava pequeno pois eu não determinei o tamanho, logo o navegador calculou
-    o tamanho dele com base nas regras do flexbox, uma vez que o .container é um elemento flexivel,
-    quando o tamanho dele é baseado nas regras do flexbox ele terá o tamanho necessário para guardar todo
-    o meu conteúdo, mas de "maneira" apertada, e não confortavel
-    
-    */
+    width: 100%;
+    max-width: 560px;              /* no computador, no máximo 560px; no celular, a largura da tela */
+    background-color: var(--superficie);
+    border-radius: 28px;
+    overflow: hidden;              /* corta o cabeçalho escuro nos cantos arredondados */
+    box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.7);
 }
 
+/* Faixa escura do topo, com o mesmo céu do fundo da página */
 header {
-    margin-bottom: 1.2rem;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 28px;
+    color: var(--texto-cab);
+    background:
+        radial-gradient(320px 160px at 100% 0%, var(--nuvem-a), transparent 70%),
+        radial-gradient(280px 160px at 0% 120%, var(--nuvem-b), transparent 70%),
+        linear-gradient(135deg, var(--cab-1), var(--cab-2));
+}
+
+/* Estrelinhas só dentro do cabeçalho (mesma técnica do fundo) */
+header::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+        radial-gradient(1.2px 1.2px at 30px 20px, var(--estrela), transparent),
+        radial-gradient(1px 1px at 120px 70px, var(--estrela), transparent),
+        radial-gradient(1.5px 1.5px at 210px 30px, var(--estrela), transparent);
+    background-size: 260px 100px;
+    opacity: 0.8;
+}
+
+/* O ícone em SVG: as cores do desenho também podem ser definidas pelo CSS */
+.logo {
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;                /* não deixa o ícone encolher */
+}
+.logo circle { fill: var(--destaque); }
+.logo path {
+    fill: none;
+    stroke: var(--icone);
+    stroke-width: 4.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 h1 {
-    margin-bottom: 0.5rem;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 30px;
+    letter-spacing: -0.02em;       /* letras um pouco mais juntas, deixa o título mais "firme" */
+    line-height: 1.1;
+}
+
+header p {
+    margin-top: 4px;
+    color: var(--texto-cab);
+    opacity: 0.78;
 }
 
 main {
-    margin-bottom: 1rem;
+    padding: 24px 28px 8px;
 }
 
+
+/* ---------- 4. Formulário de nova tarefa ---------- */
+
+/* CSS Grid: três colunas. A primeira (1fr) ocupa o espaço que sobrar; as outras ficam do tamanho do conteúdo */
 .adicionaTarefa {
-    margin-bottom: 1rem;
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 10px;
+    margin-bottom: 28px;
 }
 
-input[type="text"], input[type="time"], input[type="submit"] {
-    border-radius: 5px;
-    border: none;
+/* Estilo comum dos dois campos (texto e horário) */
+.adicionaTarefa input {
+    height: 48px;
+    padding: 0 14px;
+    font: inherit;                 /* usa a mesma fonte do resto da página */
+    font-size: 15px;
+    color: var(--texto);
+    background-color: var(--superficie-2);
+    border: 1.5px solid var(--linha);
+    border-radius: 14px;
     outline: none;
-    padding: 0.5rem;
-    color: #94A3B8;
+    transition: border-color 0.15s, box-shadow 0.15s;   /* a mudança de cor acontece suavemente */
 }
 
-button[type="submit"], .excluir {
-    border-radius: 5px;
+.adicionaTarefa input::placeholder { color: var(--texto-suave); }
+
+/* :focus = quando o campo está selecionado para digitar */
+.adicionaTarefa input:focus {
+    border-color: var(--tema);
+    /* color-mix mistura duas cores: aqui 18% do tema com transparente, um "anel" de luz fraquinho */
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--tema) 18%, transparent);
+}
+
+/* Botão Adicionar com degradê verde → roxo */
+.adicionaTarefa button {
+    height: 48px;
+    padding: 0 20px;
+    font: inherit;
+    font-weight: 700;
+    color: #fff;
     border: none;
-    outline: none;
-    padding: 0.5rem;
-    color: #94A3B8;
+    border-radius: 14px;
+    cursor: pointer;
+    background: linear-gradient(135deg, var(--tema), var(--tema-2));
+    box-shadow: 0 12px 22px -12px var(--tema-2);
+    transition: transform 0.1s, filter 0.15s;
+}
+.adicionaTarefa button:hover  { filter: brightness(1.08); }  /* fica um pouco mais claro ao passar o mouse */
+.adicionaTarefa button:active { transform: scale(0.97); }    /* "afunda" ao clicar */
+
+/* Título "Minhas tarefas" com uma barrinha colorida na frente */
+h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 20px;
+}
+h2::before {
+    content: '';
+    width: 6px;
+    height: 20px;
+    border-radius: 3px;
+    background: linear-gradient(var(--tema), var(--tema-2));
 }
 
-input[type="submit"] {
-    color: #34455e;
+
+/* ---------- 5. Filtros ----------
+   Os três botões ficam dentro de uma "pílula" cinza.
+   O botão escolhido (.botaoAtivo) fica branco e em destaque. */
+.filtro {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    margin-bottom: 16px;
+    background-color: var(--superficie-2);
+    border-radius: 999px;          /* um valor bem alto deixa as pontas totalmente redondas */
+}
+
+.botao,
+.botaoAtivo {
+    flex: 1;                       /* os três botões dividem o espaço igualmente */
+    height: 40px;
+    font: inherit;
+    font-weight: 600;
+    font-size: 14px;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
 }
 
 .botao {
-    border-radius: 5px;
-    border: none;
-    outline: none;
-    padding: 0.5rem;
-    color: #94A3B8;
-    background-color: #34455e;
-    
+    color: var(--texto-suave);
+    background-color: transparent;
+}
+.botao:hover {
+    color: var(--texto);
+    background-color: color-mix(in srgb, var(--tema) 10%, transparent);
 }
 
 .botaoAtivo {
-    background-color: #6366F1;
-    color: #34455e;
-    border-radius: 5px;
-    border: none;
-    outline: none;
-    padding: 0.5rem;
-}
-
-.botao:hover {
-  background-color: #6366F1;
-  transform: scale(1.05);
-  color: #34455e;
+    color: var(--tema);
+    background-color: var(--superficie);
+    box-shadow: 0 6px 14px -10px rgba(17, 22, 43, 0.6);
 }
 
 
-
-input[type="text"] {
-    width: 50%;
-}
-
-input[type="submit"] {
-    background-color: #6366F1;
-}
-
-input[type="button"] {
-    outline: none;
-    border: none;
-    border-radius: 5px;
-    padding: 0.5rem;
-    color: #94A3B8;
-}
-
-h2 {
-     margin-bottom: 1rem;
-}
+/* ---------- 6. Lista de tarefas ---------- */
 
 .tarefas {
     display: flex;
-    justify-content:left;
-    flex-direction: column;
-    margin-top: 1.5rem;
-    gap: 0.75rem; /*Espaçamento entre os elementos filhos(cada tarefa)*/
+    flex-direction: column;        /* um item embaixo do outro */
+    gap: 10px;
 }
 
+/* Cada tarefa é uma linha: [checkbox + nome]  [horário]  [excluir] */
 .tarefa {
-    width: 100%;
     display: flex;
-    justify-content: left; /* porque mesmo declarando width da 
-    tarefa ocupando 100% da div tarefas mesmo assim span excluir
-    e horário continuaram caindo para baixo mesmo tendo espaço */
     align-items: center;
+    gap: 10px;
+    padding: 10px 10px 10px 14px;
+    background-color: var(--superficie-2);
+    border: 1.5px solid transparent;
+    border-radius: var(--raio);
+    animation: entrar 0.25s ease-out;           /* cada tarefa "aparece" suavemente */
+    transition: border-color 0.15s, background-color 0.15s;
+}
+.tarefa:hover { border-color: var(--linha); }
+
+@keyframes entrar {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: none; }
 }
 
-.tarefa label {
-    margin-left: 0.5rem;
+/* A parte com o checkbox e o nome ocupa todo o espaço que sobrar (flex: 1) */
+.descricao {
+    flex: 1;
+    min-width: 0;                  /* permite que nomes compridos quebrem linha em vez de "estourar" */
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
-div.descricao {
-    background-color: #34455e;
-    padding: 0.5rem;
-    border-radius: 5px;
-    flex: 1 /*Resolve o problema que mesmo declarando width 100% para a tarefa o span excluir e horário
-    quebravam linha, flex:1 faz a descricao ocupar apenas o espaço disponivel(espaço que sobra para
-    ela coupar com os spans na mesma linha)*/
+/* Checkbox personalizado:
+   appearance: none tira o visual padrão do navegador, e então desenhamos o nosso. */
+.descricao input[type="checkbox"] {
+    appearance: none;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border: 2px solid color-mix(in srgb, var(--texto-suave) 45%, transparent);
+    border-radius: 50%;            /* bolinha */
+    cursor: pointer;
+    display: grid;
+    place-items: center;           /* centraliza o "check" dentro da bolinha */
+    transition: background-color 0.15s, border-color 0.15s;
+}
+.descricao input[type="checkbox"]:hover { border-color: var(--tema); }
+
+/* :checked = quando a tarefa está marcada como concluída */
+.descricao input[type="checkbox"]:checked {
+    background-color: var(--tema);
+    border-color: var(--tema);
 }
 
-span {
-    margin: 0 1rem; /*podemos declarar margin horizontal= 1 rem no span(já que ele ficara a 1rem
-    de distancia da descrição e 1 rem de distancia do ultimo span, ou declarar gap=1 em tarefa)*/
+/* O "check" é um retângulo com duas bordas, girado 45° (fica com a forma de um ✓) */
+.descricao input[type="checkbox"]:checked::after {
+    content: '';
+    width: 6px;
+    height: 11px;
+    margin-top: -2px;
+    border: solid #fff;
+    border-width: 0 2.5px 2.5px 0;
+    transform: rotate(45deg);
 }
 
-span.horario {
-    border-radius: 5px;
-    background-color: #94A3B8;
-    padding: 0.5rem
+.descricao label {
+    font-size: 15.5px;
+    font-weight: 500;
+    cursor: pointer;
+    overflow-wrap: anywhere;       /* quebra palavras muito longas para não sair do cartão */
 }
 
-h1, h2 {
-    color: #F8FAFC;
+/* :has() permite estilizar a TAREFA inteira quando o checkbox dentro dela está marcado.
+   Assim a tarefa concluída fica riscada e mais clara, sem precisar de JavaScript. */
+.tarefa:has(input:checked) {
+    background-color: color-mix(in srgb, var(--tema) 8%, var(--superficie-2));
+}
+.tarefa:has(input:checked) label {
+    color: var(--texto-suave);
+    text-decoration: line-through;
+}
+
+/* Horário em forma de "etiqueta" com um reloginho na frente */
+.horario {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--tema-2);
+    background-color: color-mix(in srgb, var(--tema-2) 12%, transparent);
+    border-radius: 999px;
+}
+
+/* O reloginho é um desenho SVG usado como "máscara": a máscara recorta o formato do relógio
+   e a cor de fundo (currentColor = a mesma cor do texto) pinta esse formato.
+   Assim o ícone muda de cor junto com o tema. */
+.horario::before {
+    content: '';
+    width: 15px;
+    height: 15px;
+    background-color: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7v5l3 2'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7v5l3 2'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* Botão excluir: discreto, e fica vermelho ao passar o mouse */
+.excluir {
+    flex-shrink: 0;
+    height: 36px;
+    padding: 0 12px;
+    font: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--perigo);
+    background-color: transparent;
+    border: 1.5px solid rgba(224, 49, 49, 0.25);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+.excluir:hover {
+    color: #fff;
+    background-color: var(--perigo);
+    border-color: var(--perigo);
 }
 
 
-p, ::placeholder, label {
-    color: #94A3B8;
+/* ---------- 7. Lista vazia e contador (só com CSS) ---------- */
+
+/* :empty pega um elemento que não tem nada dentro.
+   Quando a lista está vazia (ou o filtro não encontra nada), mostramos uma mensagem no lugar. */
+.tarefas:empty::before {
+    content: '📝\A Nenhuma tarefa por aqui.\A Que tal adicionar a primeira?';
+    white-space: pre-line;         /* faz o \A virar quebra de linha */
+    display: block;
+    padding: 32px 16px;
+    text-align: center;
+    line-height: 1.7;
+    color: var(--texto-suave);
+    border: 2px dashed var(--linha);
+    border-radius: var(--raio);
 }
 
-button {
-    background-color: #6366F1;
+/* Contador com "counters" do CSS:
+   1. counter-reset cria os contadores (começando em 0) no <main>;
+   2. cada .tarefa soma 1 em "total", e cada tarefa marcada soma 1 também em "concluidas";
+   3. o rodapé, que vem depois do <main>, mostra os valores com counter(). */
+main {
+    counter-reset: total concluidas;
+}
+.tarefa {
+    counter-increment: total;
+}
+.tarefa:has(input:checked) {
+    counter-increment: total concluidas;
 }
 
-input {
-    background-color: #273447;
+footer {
+    padding: 14px 28px 24px;
 }
 
+.contador::before {
+    content: 'Mostrando ' counter(total) ' tarefa(s) · ' counter(concluidas) ' concluída(s)';
+    font-size: 13.5px;
+    color: var(--texto-suave);
+}
+
+
+/* ---------- 8. Celular e acessibilidade ---------- */
+
+/* @media: regras que só valem em telas de até 520px (celulares) */
+@media (max-width: 520px) {
+    body { padding: 0; align-items: stretch; }
+    .container { border-radius: 0; box-shadow: none; }   /* o cartão ocupa a tela inteira */
+    header { padding: 22px 18px; }
+    main { padding: 20px 18px 8px; }
+    footer { padding: 14px 18px 24px; }
+
+    /* o formulário passa a ter duas linhas: nome em cima; horário e botão embaixo */
+    .adicionaTarefa { grid-template-columns: 1fr auto; }
+    .adicionaTarefa #nome { grid-column: 1 / -1; }      /* o campo do nome ocupa a linha toda */
+
+    .tarefa { flex-wrap: wrap; }
+    .descricao { flex-basis: 100%; }                    /* nome em cima; horário e excluir embaixo */
+    .horario { margin-left: 36px; }
+    header { flex-wrap: wrap; }
+    .temas { width: 100%; justify-content: flex-start; }
+    .excluir { margin-left: auto; }
+}
+
+/* Contorno bem visível para quem navega pelo teclado (tecla Tab) */
+button:focus-visible,
+input:focus-visible {
+    outline: 3px solid var(--tema-2);
+    outline-offset: 2px;
+}
+
+/* Esconde da tela, mas mantém para leitores de tela (usado nas <label> do formulário) */
+.escondido {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+/* Quem configurou o sistema para "reduzir movimento" não vê as animações */
+@media (prefers-reduced-motion: reduce) {
+    body::before, .tarefa { animation: none; }
+}
+
+
+/* ==========================================================================
+   9. Temas de cores
+   O seletor do cabeçalho tem um <input type="radio"> para cada tema.
+   body:has(#tema-oceano:checked) quer dizer: "se o rádio do oceano estiver marcado, então...".
+   Aí trocamos só as variáveis, e todo o site muda de cor. Tudo isso sem JavaScript!
+   ========================================================================== */
+
+/* As bolinhas do seletor */
+.temas {
+    margin-left: auto;             /* empurra o seletor para a direita do cabeçalho */
+    display: flex;
+    gap: 6px;
+    position: relative;
+    z-index: 1;                    /* fica acima das estrelinhas do cabeçalho */
+}
+.temas input {
+    position: absolute;            /* o rádio de verdade fica invisível... */
+    opacity: 0;
+    width: 1px;                    /* ...minúsculo e sem receber cliques, para não ficar */
+    height: 1px;                   /*    "por cima" das bolinhas: quem recebe o clique é o label */
+    pointer-events: none;
+}
+.temas label {                     /* ...e a bolinha colorida é o <label> dele */
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    background: var(--bolinha);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+.temas label:hover { transform: scale(1.12); }
+.temas input:checked + label {     /* + seleciona o label logo depois do rádio marcado */
+    box-shadow: 0 0 0 2px var(--texto-cab), 0 0 0 5px rgba(255, 255, 255, 0.25);
+    transform: scale(1.12);
+}
+.temas input:focus-visible + label { outline: 3px solid var(--texto-cab); outline-offset: 3px; }
+
+/* Oceano: azul profundo e ciano, calmo e profissional */
+body:has(#tema-oceano:checked) {
+    --fundo-1: #061A33; --fundo-2: #0B3D66;
+    --cab-1: #072447;   --cab-2: #0E4A7A;
+    --nuvem-a: rgba(21, 170, 191, 0.55); --nuvem-b: rgba(28, 126, 214, 0.55); --nuvem-c: rgba(153, 233, 242, 0.15);
+    --estrela: #D0F4FF;
+    --tema: #1C7ED6; --tema-2: #0C8599; --destaque: #99E9F2; --icone: #072447;
+    --superficie-2: #EEF6FC; --linha: #D5E6F3; --texto: #0B2239; --texto-suave: #557089;
+}
+
+/* Floresta: verde musgo, lima e um cartão cor de creme, natural e aconchegante */
+body:has(#tema-floresta:checked) {
+    --fundo-1: #0B2B26; --fundo-2: #163832;
+    --cab-1: #0F3A2E;   --cab-2: #1F5A3D;
+    --nuvem-a: rgba(148, 216, 45, 0.40); --nuvem-b: rgba(43, 138, 62, 0.55); --nuvem-c: rgba(255, 236, 153, 0.15);
+    --estrela: #F0FFD6;
+    --tema: #2B8A3E; --tema-2: #5C940D; --destaque: #D8F5A2; --icone: #0F3A2E;
+    --superficie: #FFFDF6; --superficie-2: #F4F1E4; --linha: #E5DFC8; --texto: #1E2B1F; --texto-suave: #63705F;
+}
+
+/* Lavanda: um tema CLARO, lilás e rosa pastel, leve e delicado */
+body:has(#tema-lavanda:checked) {
+    --fundo-1: #F3E8FF; --fundo-2: #FFE4EC;
+    --cab-1: #9C36B5;   --cab-2: #E64980;
+    --nuvem-a: rgba(204, 93, 232, 0.35); --nuvem-b: rgba(247, 131, 172, 0.40); --nuvem-c: rgba(255, 255, 255, 0.6);
+    --estrela: #FFFFFF;
+    --tema: #AE3EC9; --tema-2: #D6336C; --destaque: #FFFFFF; --icone: #AE3EC9;
+    --superficie-2: #FAF3FD; --linha: #EEDDF5; --texto: #2E1A36; --texto-suave: #7D6587;
+}
+
+/* Terminal: preto com verde neon, a cara de quem programa */
+body:has(#tema-terminal:checked) {
+    --fundo-1: #050807; --fundo-2: #0B1410;
+    --cab-1: #07110C;   --cab-2: #0E2117;
+    --nuvem-a: rgba(0, 230, 118, 0.22); --nuvem-b: rgba(0, 184, 212, 0.20); --nuvem-c: rgba(0, 230, 118, 0.06);
+    --estrela: #B9FFD9;
+    --tema: #00A85A; --tema-2: #2EE6D6; --destaque: #00E676; --icone: #050807;
+    --superficie: #0F1713; --superficie-2: #16211B; --linha: #22352B; --texto: #D8F5E4; --texto-suave: #8AB39C;
+}
+/* no tema escuro, o texto do botão "Todas" (ativo) precisa ficar claro */
+body:has(#tema-terminal:checked) .botaoAtivo { color: #00E676; }
